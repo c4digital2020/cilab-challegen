@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Product from "../components/Product";
+import ProductList from "../components/ProductList";
 import { Grid } from "@material-ui/core";
 
 function Products() {
@@ -18,7 +18,7 @@ function Products() {
     <>
       {product.map((prod) => (
         <Grid item key={prod.id}>
-          <Product product={prod} />
+          <ProductList product={prod} />
         </Grid>
       ))}
     </>

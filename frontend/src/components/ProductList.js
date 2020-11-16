@@ -8,6 +8,8 @@ import {
   Typography,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
+import { Redirect } from "react-router-dom";
+import { useState } from "react";
 
 const useStyles = makeStyles({
   root: {
@@ -24,8 +26,9 @@ const useStyles = makeStyles({
   },
 });
 
-export default function Product(props) {
+export default function ProductList(props) {
   const { product } = props;
+  const [redirect, setRedirect] = useState("");
   const classes = useStyles();
   const images = product.images;
   let imageUrl;
@@ -35,9 +38,21 @@ export default function Product(props) {
   } else {
     imageUrl = ""; // TODO: Add a fall back image in case there isn't an image to show
   }
-  return (
+  const open = (id) => {
+    setRedirect(`/products/${id}`);
+  };
+  // XXX: Checks if redirect has been set, empty by default.
+  //     if empty shows a list of all the products
+  //     otherwise (if set to some url) then it should redirect the user to it
+  return !!redirect ? (
+    <Redirect to={redirect} />
+  ) : (
     <Card className={classes.root}>
-      <CardActionArea>
+      <CardActionArea
+        onClick={() => {
+          open(product.id);
+        }}
+      >
         <CardMedia
           className={classes.media}
           image={imageUrl}

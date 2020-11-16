@@ -16,4 +16,11 @@ wcapi = API(
 
 @app.route("/api/products", methods=["GET"])
 def products():
+    """ Returns a list of all the products """
     return json.jsonify(wcapi.get("products").json())
+
+
+@app.route("/api/products/<product_id>", methods=["GET"])
+def product_specific(product_id):
+    """ Returns information about the product associated to the product_id """
+    return json.jsonify(wcapi.get(f"products/{product_id}").json())

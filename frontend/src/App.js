@@ -1,12 +1,9 @@
-import Products from "./pages/Products"
-import Layout from "./pages/Layout"
+import Routes from "./Routes";
 
 function App() {
   return (
     <>
-      <Layout>
-        <Products />
-      </Layout>
+      <Routes />
     </>
   );
 }
