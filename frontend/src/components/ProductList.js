@@ -10,6 +10,9 @@ import {
 import { makeStyles } from "@material-ui/core/styles";
 import { Redirect } from "react-router-dom";
 import { useState } from "react";
+import { connect } from "react-redux";
+
+import { addProduct, removeProduct } from "../actions/Product";
 
 const useStyles = makeStyles({
   root: {
@@ -26,8 +29,45 @@ const useStyles = makeStyles({
   },
 });
 
-export default function ProductList(props) {
-  const { product } = props;
+// NOTE: A big part of this code is copied from "../pages/Product" find a way to
+//       extract it apart.
+function AddShoppingCartButton(props) {
+  const {
+    purchaseProducts,
+    product: productProp,
+    onRemove,
+    onPurchase,
+  } = props;
+  const classes = useStyles();
+  const bought = (product) => {
+    // Returns true if the product passed as an argument is in the list of
+    // purchaseProducts
+    return !!purchaseProducts.filter((prod) => product.id === prod.id).length;
+  };
+  return bought(productProp) ? (
+    <Button
+      size="small"
+      color="secondary"
+      variant="contained"
+      onClick={onRemove}
+      className={classes.buttonAlign}
+    >
+      Remove from shopping cart
+    </Button>
+  ) : (
+    <Button
+      size="small"
+      color="primary"
+      onClick={onPurchase}
+      className={classes.buttonAlign}
+    >
+      Add to shopping cart
+    </Button>
+  );
+}
+
+function ProductList(props) {
+  const { product, addProduct, removeProduct, products } = props;
   const [redirect, setRedirect] = useState("");
   const classes = useStyles();
   const images = product.images;
@@ -40,6 +80,12 @@ export default function ProductList(props) {
   }
   const open = (id) => {
     setRedirect(`/products/${id}`);
+  };
+  const onPurchase = () => {
+    addProduct(product);
+  };
+  const onRemove = () => {
+    removeProduct(product);
   };
   // XXX: Checks if redirect has been set, empty by default.
   //     if empty shows a list of all the products
@@ -74,10 +120,30 @@ export default function ProductList(props) {
         </CardContent>
       </CardActionArea>
       <CardActions>
-        <Button size="small" color="primary" className={classes.buttonAlign}>
-          Add to shopping car
-        </Button>
+        <AddShoppingCartButton
+          onPurchase={onPurchase}
+          onRemove={onRemove}
+          product={product}
+          purchaseProducts={products.addedToCart}
+        />
       </CardActions>
     </Card>
   );
 }
+
+const mapStateToProps = (state) => ({
+  products: state.products,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  addProduct: function (product) {
+    console.log("Add Product");
+    dispatch(addProduct(product));
+  },
+  removeProduct: function (product) {
+    console.log("Remove Product");
+    dispatch(removeProduct(product));
+  },
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProductList);

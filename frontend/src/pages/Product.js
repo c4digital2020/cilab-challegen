@@ -10,6 +10,8 @@ import {
 } from "@material-ui/core";
 import { useParams } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
+import { connect } from "react-redux";
+import { addProduct, removeProduct } from "../actions/Product";
 
 const useStyles = makeStyles((theme) => ({
   backdrop: {
@@ -39,6 +41,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+// FIXME: This might not be needed
+// Comment Section for the products
+// Currently is not being used
 function CommentSection() {
   const classes = useStyles();
 
@@ -59,7 +64,32 @@ function CommentSection() {
   );
 }
 
-function ProductDetails(product) {
+function PurchaseButton(props) {
+  const {
+    purchaseProducts,
+    product: productProp,
+    onRemove,
+    onPurchase,
+    ...extraProps
+  } = props;
+  const bought = (product) => {
+    // Returns true if the product passed as an argument is in the list of
+    // purchaseProducts
+    return !!purchaseProducts.filter((prod) => product.id === prod.id).length;
+  };
+  return bought(productProp) ? (
+    <Button {...extraProps} variant="contained" color="secondary" onClick={onRemove}>
+      Remove
+    </Button>
+  ) : (
+    <Button {...extraProps} onClick={onPurchase}>
+      Purchase
+    </Button>
+  );
+}
+
+function ProductDetails(props) {
+  const { product, onPurchase, onRemove, purchaseProducts } = props;
   const classes = useStyles();
   return (
     <div className={classes.description}>
@@ -75,14 +105,21 @@ function ProductDetails(product) {
         Price:
         <span dangerouslySetInnerHTML={{ __html: product.price_html }}></span>
       </Typography>
-      <Button variant="outlined" color="primary" className={classes.button}>
-        Purchase
-      </Button>
+      <PurchaseButton
+        variant="outlined"
+        color="primary"
+        className={classes.button}
+        // XXX: There is a little of prop drilling here, which might become a problem later 👀
+        onPurchase={onPurchase}
+        onRemove={onRemove}
+        purchaseProducts={purchaseProducts}
+        product={product}
+      />
     </div>
   );
 }
 
-function Products() {
+function Product(props) {
   const [product, setProduct] = useState();
   const { productId } = useParams();
   const classes = useStyles();
@@ -96,36 +133,56 @@ function Products() {
     fetchAsync(productId);
   }, [productId]);
 
-  console.log(product);
+  const addProduct = () => {
+    props.addProduct(product);
+  };
+  const removeProduct = () => {
+    props.removeProduct(product);
+  };
   return !product ? ( // If product hasn't loaded
     <Backdrop className={classes.backdrop} open={true}>
       <CircularProgress color="inherit" />
     </Backdrop>
   ) : (
     <>
-      <Grid container spacing={4}>
-        <Grid container spacing={2}>
-          <Grid item sm={6}>
-            {
-              // Display image
-              // TODO: consider if the product doesn't have an Image
-            }
-            <img className={classes.image} src={product.images[0].src} />
-          </Grid>
-          <Grid item sm={6}>
-            {
-              // Display information
-            }
-            <ProductDetails {...product} />
-          </Grid>
+      <Grid container>
+        <Grid item sm={6}>
+          {
+            // Display image
+            // TODO: consider if the product doesn't have an Image
+          }
+          <img className={classes.image} src={product.images[0].src} />
+        </Grid>
+        <Grid item sm={6}>
+          {
+            // Display information
+          }
+          <ProductDetails
+            product={product}
+            onPurchase={addProduct}
+            onRemove={removeProduct}
+            purchaseProducts={props.products.addedToCart}
+          />
         </Grid>
       </Grid>
       {
-        // Comments for the product
+        // <CommentSection />
       }
-      <CommentSection />
     </>
   );
 }
 
-export default Products;
+const mapStateToProps = (state) => ({
+  products: state.products,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  addProduct: function (product) {
+    dispatch(addProduct(product));
+  },
+  removeProduct: function (product) {
+    dispatch(removeProduct(product));
+  },
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Product);
